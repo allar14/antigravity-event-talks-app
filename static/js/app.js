@@ -27,6 +27,10 @@ const elements = {
     resetFiltersBtn: document.getElementById('reset-filters-btn'),
     notesGrid: document.getElementById('notes-grid'),
     toastContainer: document.getElementById('toast-container'),
+    btnThemeToggle: document.getElementById('btn-theme-toggle'),
+    themeIconSun: document.getElementById('theme-icon-sun'),
+    themeIconMoon: document.getElementById('theme-icon-moon'),
+    btnExportCsv: document.getElementById('btn-export-csv'),
     
     // Modal Elements
     tweetModal: document.getElementById('tweet-modal'),
@@ -53,6 +57,7 @@ const typeConfig = {
 
 // Initialize Application
 document.addEventListener('DOMContentLoaded', () => {
+    initializeTheme();
     fetchReleases();
     setupEventListeners();
 });
@@ -62,6 +67,12 @@ function setupEventListeners() {
     // Refresh buttons
     elements.btnRefresh.addEventListener('click', () => fetchReleases(true));
     elements.btnRetry.addEventListener('click', () => fetchReleases(true));
+    
+    // Theme toggle
+    elements.btnThemeToggle.addEventListener('click', toggleTheme);
+    
+    // Export CSV
+    elements.btnExportCsv.addEventListener('click', exportToCsv);
     
     // Search inputs
     elements.searchInput.addEventListener('input', (e) => {
@@ -249,12 +260,18 @@ function renderGrid() {
                 ${update.html}
             </div>
             <div class="note-card-footer">
-                <button class="btn-card-action btn-card-tweet" title="Share this update on X / Twitter">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24" style="vertical-align: middle;">
-                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                    </svg>
-                    <span>Tweet</span>
-                </button>
+                <div class="card-actions-group">
+                    <button class="btn-card-action btn-card-tweet" title="Share this update on X / Twitter">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24" style="vertical-align: middle;">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                        </svg>
+                        <span>Tweet</span>
+                    </button>
+                    <button class="btn-card-action btn-card-copy" title="Copy plain text to clipboard">
+                        <i data-lucide="copy" style="width: 13px; height: 13px; vertical-align: middle;"></i>
+                        <span>Copy</span>
+                    </button>
+                </div>
                 <a href="${update.link}" target="_blank" rel="noopener noreferrer" class="link-original">
                     <span>View Official</span>
                     <i data-lucide="external-link"></i>
@@ -265,6 +282,10 @@ function renderGrid() {
         // Attach tweet event
         const tweetBtn = card.querySelector('.btn-card-tweet');
         tweetBtn.addEventListener('click', () => openTweetModal(update));
+        
+        // Attach copy event
+        const copyBtn = card.querySelector('.btn-card-copy');
+        copyBtn.addEventListener('click', () => copyToClipboard(update.text));
         
         elements.notesGrid.appendChild(card);
     });
@@ -419,4 +440,109 @@ function showToast(message, type = 'success') {
             toast.remove();
         });
     }, 3000);
+}
+
+// Theme Handling
+function initializeTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    if (savedTheme === 'light') {
+        document.body.classList.add('light-theme');
+        elements.themeIconSun.style.display = 'none';
+        elements.themeIconMoon.style.display = 'block';
+    } else {
+        document.body.classList.remove('light-theme');
+        elements.themeIconSun.style.display = 'block';
+        elements.themeIconMoon.style.display = 'none';
+    }
+}
+
+function toggleTheme() {
+    const isLightTheme = document.body.classList.toggle('light-theme');
+    if (isLightTheme) {
+        localStorage.setItem('theme', 'light');
+        elements.themeIconSun.style.display = 'none';
+        elements.themeIconMoon.style.display = 'block';
+        showToast('Switched to Light Mode', 'success');
+    } else {
+        localStorage.setItem('theme', 'dark');
+        elements.themeIconSun.style.display = 'block';
+        elements.themeIconMoon.style.display = 'none';
+        showToast('Switched to Dark Mode', 'success');
+    }
+}
+
+// Copy to Clipboard
+function copyToClipboard(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text)
+            .then(() => {
+                showToast('Copied to clipboard!', 'success');
+            })
+            .catch(err => {
+                console.error('Copy failed:', err);
+                fallbackCopyToClipboard(text);
+            });
+    } else {
+        fallbackCopyToClipboard(text);
+    }
+}
+
+function fallbackCopyToClipboard(text) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";  // avoid scrolling to bottom
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+            showToast('Copied to clipboard!', 'success');
+        } else {
+            showToast('Failed to copy to clipboard', 'error');
+        }
+    } catch (err) {
+        console.error('Fallback copy failed:', err);
+        showToast('Failed to copy to clipboard', 'error');
+    }
+    document.body.removeChild(textArea);
+}
+
+// Export to CSV
+function exportToCsv() {
+    if (appState.filteredUpdates.length === 0) {
+        showToast('No updates to export', 'error');
+        return;
+    }
+    
+    // Construct CSV header
+    const headers = ['Date', 'Type', 'Link', 'Description'];
+    const csvRows = [headers.join(",")];
+    
+    appState.filteredUpdates.forEach(update => {
+        // Double-quotes inside fields need to be escaped as two double-quotes
+        const cleanText = update.text.replace(/"/g, '""');
+        const cleanLink = update.link.replace(/"/g, '""');
+        const cleanType = update.type.replace(/"/g, '""');
+        const cleanDate = update.date.replace(/"/g, '""');
+        
+        csvRows.push(`"${cleanDate}","${cleanType}","${cleanLink}","${cleanText}"`);
+    });
+    
+    const csvString = "\uFEFF" + csvRows.join("\n"); // Include BOM for proper Excel encoding of UTF-8 characters
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    
+    const typeFilter = appState.currentTypeFilter.toLowerCase();
+    link.setAttribute("download", `bq_updates_${typeFilter}.csv`);
+    document.body.appendChild(link);
+    
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    showToast(`Exported ${appState.filteredUpdates.length} updates to CSV!`, 'success');
 }

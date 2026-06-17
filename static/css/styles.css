@@ -40,6 +40,102 @@
     --border-radius-sm: 8px;
 }
 
+/* Light Theme Variables Override */
+body.light-theme {
+    --bg-dark: #f1f5f9;
+    --bg-card: rgba(255, 255, 255, 0.75);
+    --bg-card-hover: rgba(255, 255, 255, 0.9);
+    --border-color: rgba(15, 23, 42, 0.08);
+    --border-hover: rgba(15, 23, 42, 0.15);
+    
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    
+    --primary-gradient: linear-gradient(135deg, #38bdf8 0%, #1d4ed8 100%);
+    --primary-glow: rgba(14, 165, 233, 0.15);
+}
+
+body.light-theme .bg-glow {
+    opacity: 0.08;
+}
+
+body.light-theme .note-card-footer,
+body.light-theme .modal-header,
+body.light-theme .modal-footer {
+    border-top-color: rgba(15, 23, 42, 0.05);
+    border-bottom-color: rgba(15, 23, 42, 0.05);
+}
+
+body.light-theme .btn-card-action {
+    background: rgba(15, 23, 42, 0.02);
+}
+
+body.light-theme .btn-card-action:hover {
+    background: rgba(15, 23, 42, 0.06);
+}
+
+body.light-theme .status-indicator {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+body.light-theme .update-preview-card {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+body.light-theme #tweet-textarea {
+    background: rgba(255, 255, 255, 0.8);
+    color: #0f172a;
+}
+
+body.light-theme #search-input {
+    background: rgba(0, 0, 0, 0.02);
+    color: #0f172a;
+}
+
+body.light-theme #search-input:focus {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+body.light-theme .filter-pill {
+    background: rgba(0, 0, 0, 0.03);
+    color: #475569;
+}
+
+body.light-theme .filter-pill:hover {
+    background: rgba(0, 0, 0, 0.06);
+    color: #0f172a;
+}
+
+body.light-theme .filter-pill.active {
+    color: white;
+}
+
+body.light-theme .stat-card {
+    background: rgba(255, 255, 255, 0.75);
+}
+
+body.light-theme .stat-card:hover {
+    background: rgba(255, 255, 255, 0.9);
+}
+
+/* Helper layout classes */
+.card-actions-group {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.btn-icon-only {
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius-md);
+}
+
 * {
     margin: 0;
     padding: 0;
