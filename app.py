@@ -80,15 +80,33 @@ def clean_html_to_text(html_content):
     """Converts HTML content to clean, readable plain text for Twitter/X sharing."""
     soup = BeautifulSoup(html_content, 'html.parser')
     
-    # Replace anchor tags with text [link] format or just text
-    for a in soup.find_all('a'):
-        a.replace_with(f"{a.get_text()} ")
+    # Collapse whitespace inside each text node to prevent mid-line breaks
+    for text_node in soup.find_all(string=True):
+        collapsed = re.sub(r'\s+', ' ', text_node)
+        text_node.replace_with(collapsed)
+        
+    # Format list items with bullet points
+    for li in soup.find_all('li'):
+        li.insert_before('\n• ')
+        li.insert_after('\n')
+        
+    # Add spacing around block-level elements
+    for block in soup.find_all(['p', 'div', 'h4', 'h5', 'h6', 'tr', 'blockquote']):
+        block.insert_before('\n')
+        block.insert_after('\n')
         
     text = soup.get_text()
     
-    # Remove redundant whitespace and newlines
-    text = re.sub(r'\s+', ' ', text)
-    return text.strip()
+    # Process line-by-line to clean up spacing
+    lines = []
+    for line in text.split('\n'):
+        cleaned_line = re.sub(r'\s+', ' ', line).strip()
+        if cleaned_line:
+            lines.append(cleaned_line)
+        elif not lines or lines[-1] != '':
+            lines.append('')
+            
+    return '\n'.join(lines).strip()
 
 def generate_tweet_draft(update_type, date_str, text, link):
     """Generates a nicely formatted tweet draft fitting within the 280-char limit."""
